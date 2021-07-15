@@ -426,7 +426,7 @@ class BaseClient(object):
     def callbacks(self):
         return self.__callbacks
 
-    @limit_call_depth(4)
+    @limit_call_depth(10)
     def _fetch(self,
                method: str,
                urlpath: str,
@@ -1314,7 +1314,7 @@ class Selector(object):
 
         WDA use two key to find elements "using", "value"
         Examples:
-        "using" can be on of 
+        "using" can be on of
             "partial link text", "link text"
             "name", "id", "accessibility id"
             "class name", "class chain", "xpath", "predicate string"
@@ -1468,7 +1468,7 @@ class Selector(object):
         chain = '**' + ''.join(
             self._parent_class_chains) + self._gen_class_chain()
         if DEBUG:
-            print('CHAIN:', chain)
+            logger.debug('CHAIN:', chain)
         return self._wdasearch('class chain', chain)
 
     def find_elements(self):
@@ -1485,7 +1485,7 @@ class Selector(object):
     def count(self):
         return len(self.find_element_ids())
 
-    def get(self, timeout=None, raise_error=True):
+    def get(self, timeout=None, raise_error=True,order=1,retry=1):
         """
         Args:
             timeout (float): timeout for query element, unit seconds
@@ -1501,17 +1501,19 @@ class Selector(object):
         start_time = time.time()
         if timeout is None:
             timeout = self._timeout
+        internal = timeout / retry
         while True:
             elems = self.find_elements()
             if len(elems) > 0:
-                return elems[0]
+                return elems[order-1]
             if start_time + timeout < time.time():
                 break
-            time.sleep(0.5)
+            time.sleep(internal)
 
         if raise_error:
             raise WDAElementNotFoundError("element not found",
                                           "timeout %.1f" % timeout)
+        return None
 
     def __getattr__(self, oper):
         if oper.startswith("_"):
