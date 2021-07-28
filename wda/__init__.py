@@ -1505,7 +1505,10 @@ class Selector(object):
         while True:
             elems = self.find_elements()
             if len(elems) > 0:
-                return elems[order-1]
+                if order-1 < len(elems):
+                    return elems[order-1]
+                else:
+                    return elems[0]
             if start_time + timeout < time.time():
                 break
             time.sleep(internal)
