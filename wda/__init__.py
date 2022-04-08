@@ -1224,7 +1224,7 @@ class Alert(object):
     @contextlib.contextmanager
     def watch_and_click(self,
                         buttons: Optional[list] = None,
-                        interval: float = 2.0):
+                        interval: float = 2.0, file=""):
         """ watch and click button
         Args:
             buttons: buttons name which need to click
@@ -1242,6 +1242,9 @@ class Alert(object):
                     logger.info("Alert detected, buttons: %s", alert_buttons)
                     for btn_name in buttons:
                         if btn_name in alert_buttons:
+                            if file:
+                                logger.info("screenshot: %s", file)
+                                self._c.screenshot(file).save(file)
                             logger.info("Alert click: %s", btn_name)
                             self.click(btn_name)
                             break
@@ -1252,7 +1255,7 @@ class Alert(object):
                 time.sleep(interval)
 
         threading.Thread(name="alert", target=_inner, daemon=True).start()
-        yield None
+        yield file
         event.set()
 
 
